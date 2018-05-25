@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>eigen矩阵运算</title> 
+		<script async type="text/javascript" src="main.js"></script>
+		<style> 
+		</style>
+	<head>
+	<body>
+	<h3>矩阵加法</h3> 
+		<textarea id="A1" rows="3" cols="20" >1 2 3&#13;&#10;4 5 6</textarea>+
+		<textarea id="B1" rows="3" cols="20" >7 8 9&#13;&#10;0 1 2</textarea>
+		<button onclick="calc1()">=</button>
+		<textarea id="C1" rows="3" cols="20" ></textarea> 
+	<h3>矩阵减法</h3>
+		<textarea id="A2" rows="3" cols="20" >1 2 3&#13;&#10;4 5 6</textarea>-
+		<textarea id="B2" rows="3" cols="20" >7 8 9&#13;&#10;1 2 3</textarea>
+		<button onclick="calc2()">=</button>
+		<textarea id="C2" rows="3" cols="20" ></textarea> 
+	<h3>矩阵转置</h3>
+		<textarea id="A3" rows="3" cols="20" >1 2 3&#13;&#10;4 5 6</textarea>
+		<button onclick="calc3()">=></button>
+		<textarea id="C3" rows="3" cols="20" ></textarea> 
+	<h3>矩阵乘法</h3>
+		<textarea id="A4" rows="3" cols="20" >1 2 3&#13;&#10;4 5 6</textarea>*
+		<textarea id="B4" rows="3" cols="20" >7 8&#13;&#10;0 1&#13;&#10;3 4</textarea>
+		<button onclick="calc4()">=</button>
+		<textarea id="C4" rows="3" cols="20" ></textarea> 
+	<h3>矩阵求逆</h3>
+		<textarea id="A5" rows="3" cols="20" >1 1 1&#13;&#10;1 2 3&#13;&#10;1 5 1</textarea>
+		<button onclick="calc5()">=></button>
+		<textarea id="C5" rows="3" cols="20" ></textarea> 
+	<h3>伴随矩阵</h3>
+		<textarea id="A6" rows="3" cols="20" >1 1 1&#13;&#10;1 2 3&#13;&#10;1 5 1</textarea>
+		<button onclick="calc6()">=></button>
+		<textarea id="C6" rows="3" cols="20" ></textarea>
+	<h3>矩阵求迹</h3>
+		<textarea id="A7" rows="3" cols="20" >1 2 3&#13;&#10;4 5 6</textarea> 
+		<button onclick="calc7()">=></button>
+		<textarea id="C7" rows="3" cols="20" ></textarea>  
+	<h3>矩阵行列式</h3>
+		<textarea id="A8" rows="3" cols="20" >1 1 1&#13;&#10;1 2 3&#13;&#10;1 5 1</textarea>
+		<button onclick="calc8()">=></button>
+		<textarea id="C8" rows="3" cols="20" ></textarea> 
+	<h3>矩阵求秩</h3>
+		<textarea id="A9" rows="3" cols="20" >1 2 3&#13;&#10;4 5 6&#13;&#10;8 10 12</textarea>
+		<button onclick="calc9()">=></button>
+		<textarea id="C9" rows="3" cols="20" ></textarea>  
+	</body>
+	<script>
+		/**
+		*js数组转c指针
+		*@return 返回c指针
+		*/
+		function array2cpoint(arr)
+		{
+			var BYTES=8;
+			var point = Module._malloc(arr.length*BYTES);
+			for(var i=0;i<arr.length;i++)
+			{
+				Module.setValue(point+i*BYTES, arr[i], 'double')
+			}
+			//Module._free(point);//释放指针
+			return point;
+		}
+		/**
+		*c指针转js数组
+		*@agr point c指针
+		*@agr length 需要知道数组长度
+		*/
+		function cpoint2array(point,length)
+		{
+			var BYTES=8;
+			var arr=[];
+			for(var i=0;i<length;i++)
+			{
+				arr[i]=Module.getValue(arrBuf+i*BYTES, "double");// 
+			}
+			return arr;
+		}
+		/**
+		*获取矩阵
+		*/
+		function MatrixValue(ele)
+		{ 
+			var cols=0;//列数
+			var rows=0;//行数
+			var raw=[];//一维数组 
+			var arr=[];//二维数组
+			var lines=ele.value.split("\n");
+			rows=lines.length;
+			for(var i=0;i<rows;i++)
+			{
+				arr[i]=[];
+				var _line=lines[i].trim(); 
+				while(true)
+				{
+					var id=_line.indexOf(" ");
+					var item;
+					if(id==-1)
+					{
+						item=parseFloat(_line.substring(0));
+						arr[i].push(item);
+						raw.push(item);
+						break;
+					}
+					item=parseFloat(_line.substring(0,id));
+					arr[i].push(item);
+					raw.push(item);
+					_line=_line.substring( id).trim();
+				} 
+			}
+			cols=arr[0].length;
+			var point=array2cpoint(raw);
+			return {cols,rows,arr,raw,point};
+		}
+		function calc1()
+		{
+			var a=MatrixValue(A1);
+			var b=MatrixValue(B1);
+			console.log(a);
+			 var m=_addMatrixXd(a.rows,a.cols,a.point,b.rows,b.cols,b.point);
+			//var m=_printMatrixXd(a.rows,a.cols,a.point);
+			console.log("返回结果",m,Pointer_stringify(m)); 
+			C1.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a);
+			Module._free(b);
+		}
+		function calc2()
+		{
+			var a=MatrixValue(A2);
+			var b=MatrixValue(B2); 
+			var m=_subMatrixXd(a.rows,a.cols,a.point,b.rows,b.cols,b.point);   
+			C2.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a);
+			Module._free(b);
+		}
+		function calc3()
+		{
+			var a=MatrixValue(A3); 
+			var m=_trMatrixXd(a.rows,a.cols,a.point );   
+			C3.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a); 
+		}
+		function calc4()
+		{
+			var a=MatrixValue(A4);
+			var b=MatrixValue(B4); 
+			var m=_muiltMatrixXd(a.rows,a.cols,a.point,b.rows,b.cols,b.point);   
+			C4.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a);
+			Module._free(b);
+		}
+		function calc5()
+		{
+			var a=MatrixValue(A5); 
+			var m=_inverseMatrixXd(a.rows,a.cols,a.point );   
+			C5.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a); 
+		}
+		function calc6()
+		{
+			var a=MatrixValue(A6); 
+			var m=_adjointMatrixXd(a.rows,a.cols,a.point );   
+			C6.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a); 
+		}
+		function calc7()
+		{
+			var a=MatrixValue(A7); 
+			var m=_traceMatrixXd(a.rows,a.cols,a.point);   
+			C7.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a); 
+		}
+		function calc8()
+		{
+			var a=MatrixValue(A8); 
+			var m=_detMatrixXd(a.rows,a.cols,a.point );   
+			C8.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a); 
+		}
+		function calc9()
+		{
+			var a=MatrixValue(A9); 
+			var m=_rankMatrixXd(a.rows,a.cols,a.point );   
+			C9.value=Pointer_stringify(m);
+			Module._free(m);
+			Module._free(a); 
+		}
+	</script>
+</html>
